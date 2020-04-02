@@ -88,6 +88,10 @@ defmodule Astarte.Housekeeping.Queries do
 
   defp do_create_realm(realm_name, public_key_pem, replication_map_str) do
     Xandra.Cluster.run(:xandra, [timeout: 60_000], fn conn ->
+      IO.puts("ciao ciao ciao: #{inspect(conn)}")
+      :erlang.display(conn)
+      IO.puts("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
       with :ok <- validate_realm_name(realm_name),
            :ok <- create_realm_keyspace(conn, realm_name, replication_map_str),
            :ok <- use_realm(conn, realm_name),
