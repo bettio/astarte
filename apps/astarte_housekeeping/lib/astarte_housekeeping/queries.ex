@@ -87,36 +87,38 @@ defmodule Astarte.Housekeeping.Queries do
   end
 
   defp do_create_realm(realm_name, public_key_pem, replication_map_str) do
-    Xandra.Cluster.run(:xandra, [timeout: 60_000], fn conn ->
-      IO.puts("ciao ciao ciao: #{inspect(conn)}")
-      :erlang.display(conn)
-      IO.puts("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    Xandra.Cluster.run(:xandra, [timeout: 60_000], fn pconn ->
+      Xandra.run(pconn, fn conn ->
+        IO.puts("ciao ciao ciao: #{inspect(conn)}")
+        :erlang.display(conn)
+        IO.puts("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-      with :ok <- validate_realm_name(realm_name),
-           :ok <- create_realm_keyspace(conn, realm_name, replication_map_str),
-           :ok <- use_realm(conn, realm_name),
-           :ok <- create_realm_kv_store(conn),
-           :ok <- create_names_table(conn),
-           :ok <- create_devices_table(conn),
-           :ok <- create_endpoints_table(conn),
-           :ok <- create_interfaces_table(conn),
-           :ok <- create_individual_properties_table(conn),
-           :ok <- create_simple_triggers_table(conn),
-           :ok <- create_grouped_devices_table(conn),
-           :ok <- insert_realm_public_key(conn, public_key_pem),
-           :ok <- insert_realm_astarte_schema_version(conn),
-           :ok <- insert_realm(conn, realm_name) do
-        :ok
-      else
-        {:error, reason} ->
-          _ =
-            Logger.warn("Cannot create realm: #{inspect(reason)}.",
-              tag: "realm_creation_failed",
-              realm: realm_name
-            )
+        with :ok <- validate_realm_name(realm_name),
+             :ok <- create_realm_keyspace(conn, realm_name, replication_map_str),
+             :ok <- use_realm(conn, realm_name),
+             :ok <- create_realm_kv_store(conn),
+             :ok <- create_names_table(conn),
+             :ok <- create_devices_table(conn),
+             :ok <- create_endpoints_table(conn),
+             :ok <- create_interfaces_table(conn),
+             :ok <- create_individual_properties_table(conn),
+             :ok <- create_simple_triggers_table(conn),
+             :ok <- create_grouped_devices_table(conn),
+             :ok <- insert_realm_public_key(conn, public_key_pem),
+             :ok <- insert_realm_astarte_schema_version(conn),
+             :ok <- insert_realm(conn, realm_name) do
+          :ok
+        else
+          {:error, reason} ->
+            _ =
+              Logger.warn("Cannot create realm: #{inspect(reason)}.",
+                tag: "realm_creation_failed",
+                realm: realm_name
+              )
 
-          {:error, reason}
-      end
+            {:error, reason}
+        end
+      end)
     end)
   end
 
