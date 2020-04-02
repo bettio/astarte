@@ -92,6 +92,8 @@ defmodule Astarte.Housekeeping.Queries do
     Xandra.Cluster.run(:xandra, [timeout: 60_000], fn pconn ->
       IO.puts("ciao2: #{inspect(self())}")
 
+      IO.puts("pconn: #{inspect(pconn)}")
+
       Xandra.run(pconn, fn conn ->
         IO.puts("ciao3: #{inspect(self())}")
         IO.puts("ciao ciao ciao: #{inspect(conn)}")
