@@ -87,8 +87,13 @@ defmodule Astarte.Housekeeping.Queries do
   end
 
   defp do_create_realm(realm_name, public_key_pem, replication_map_str) do
+    IO.puts("ciao: #{inspect(self())}")
+
     Xandra.Cluster.run(:xandra, [timeout: 60_000], fn pconn ->
+      IO.puts("ciao2: #{inspect(self())}")
+
       Xandra.run(pconn, fn conn ->
+        IO.puts("ciao3: #{inspect(self())}")
         IO.puts("ciao ciao ciao: #{inspect(conn)}")
         :erlang.display(conn)
         IO.puts("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
