@@ -139,22 +139,24 @@ defmodule Astarte.Housekeeping.Queries do
     AND durable_writes = true;
     """
 
-    with {:ok, %Xandra.SchemaChange{}} <-
-           Xandra.execute(conn, query, %{}, consistency: :each_quorum) do
-      :ok
-    else
-      {:error, %Xandra.Error{} = err} ->
-        _ = Logger.warn("Database error: #{inspect(err)}.", tag: "database_error")
-        {:error, :database_error}
+    CSystem.run_with_schema_agreement(conn, fn conn ->
+      with {:ok, %Xandra.SchemaChange{}} <-
+             Xandra.execute(conn, query, %{}, consistency: :each_quorum) do
+        :ok
+      else
+        {:error, %Xandra.Error{} = err} ->
+          _ = Logger.warn("Database error: #{inspect(err)}.", tag: "database_error")
+          {:error, :database_error}
 
-      {:error, %Xandra.ConnectionError{} = err} ->
-        _ =
-          Logger.warn("Database connection error: #{inspect(err)}.",
-            tag: "database_connection_error"
-          )
+        {:error, %Xandra.ConnectionError{} = err} ->
+          _ =
+            Logger.warn("Database connection error: #{inspect(err)}.",
+              tag: "database_connection_error"
+            )
 
-        {:error, :database_connection_error}
-    end
+          {:error, :database_connection_error}
+      end
+    end)
   end
 
   defp create_realm_kv_store({conn, realm}) do
