@@ -331,7 +331,7 @@ defmodule Astarte.Housekeeping.Queries do
     """
 
     with {:ok, %Xandra.SchemaChange{}} <-
-           Xandra.execute(conn, query, %{}, consistency: :each_quorum) do
+           execute_schema_change(conn, query, %{}, consistency: :each_quorum) do
       :ok
     else
       {:error, %Xandra.Error{} = err} ->
@@ -1085,6 +1085,24 @@ defmodule Astarte.Housekeeping.Queries do
           )
 
         {:error, :database_connection_error}
+    end
+  end
+
+  defp execute_schema_change(conn, query, args, opts \\ []) do
+    result =
+      CSystem.run_with_schema_agreement(conn, fn conn ->
+        Xandra.execute(conn, query, args, opts)
+      end)
+
+    case result do
+      {:error, :timeout} ->
+        Xandra.Error.new(:agreement_timeout, "Schema agreement wait timeout.")
+
+      {:error, :no_schema_change} ->
+        Xandra.Error.new(:no_schema_change, "Statement did not change the schema_version.")
+
+      any ->
+        any
     end
   end
 end
